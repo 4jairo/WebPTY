@@ -55,8 +55,12 @@ function getShellsUnix() {
         shellsInfo.shells = CliArgs.shells
     } else {
         try {
-            const shells = fs.readFileSync('/etc/shells').toString('utf8')
-            shellsInfo.shells = shells.split('\n')
+            shellsInfo.shells = fs.readFileSync('/etc/shells')
+                .toString('utf8')
+                .split('\n')
+                .map(line => line.split('#')[0].trim())
+                .filter(line => line)
+
         } catch (error) {
             logger.warn(`Shells file doesn't exist (/etc/shells)`)
         }
@@ -68,6 +72,8 @@ function getShellsUnix() {
             shellsInfo.defaultShell = defaultShellIdx
         }
     }
+
+    return shellsInfo
 }
  
 function getShellsWin() {
