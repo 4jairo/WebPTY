@@ -47,7 +47,7 @@ export const createConnection = async (shell: string, customName: string = '', t
 }
 
 const createConnectionInner = (shell: string) => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const ws = new WebSocket(`${BASE_API_WS_URL}/ws?shell=${shell}`)
         const { s: defaultValues } = get(ShellsCtx)
 
@@ -71,7 +71,7 @@ const createConnectionInner = (shell: string) => {
         })
         
         ws.onopen = () => {
-            resolve({ terminal, ws })
+            resolve({ terminal, ws, code: null })
         }
         
         ws.onmessage = (e: MessageEvent<string>) => {
@@ -86,7 +86,7 @@ const createConnectionInner = (shell: string) => {
             }
             
             terminal.write("Press enter to close the terminal")
-            reject(e.code)
+            resolve({ terminal, ws, code: e.code })
         }
-    }) as Promise<{ terminal: Terminal, ws: WebSocket }>
+    }) as Promise<{ terminal: Terminal, ws: WebSocket, code: number | null }>
 }
