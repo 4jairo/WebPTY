@@ -1,0 +1,18 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+:root {
+    --color-primary: #444;
+    --color-margin: #838383;
+}
+
+#app {
+    min-height: 100vh;
+}
+
+.dropzoneTerminalPositions * {
+    pointer-events: none;
+}
