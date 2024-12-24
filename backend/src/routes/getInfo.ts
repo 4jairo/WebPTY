@@ -1,10 +1,10 @@
 import express from 'express'
 import fs from 'node:fs'
-import { exec, execSync } from 'node:child_process'
+import { execSync } from 'node:child_process'
 import path from 'node:path'
 import os from 'node:os'
 import { CliArgs } from '../cli'
-import { URLFormatOptions } from 'node:url'
+import { logger } from '../log'
 
 const infoRouter = express.Router()
 
@@ -53,8 +53,13 @@ function getShellsUnix() {
 
     if (CliArgs.shells.length) {
         shellsInfo.shells = CliArgs.shells
-    } else {  
-        shellsInfo.shells = fs.readdirSync('/etc/shells')
+    } else {
+        try {
+            const shells = fs.readFileSync('/etc/shells').toString('utf8')
+            shellsInfo.shells = shells.split('\n')
+        } catch (error) {
+            logger.warn(`Shells file doesn't exist (/etc/shells)`)
+        }
     }
 
     if(CliArgs.default) {
@@ -101,6 +106,8 @@ function getShellsWin() {
         const cfg = JSON.parse(fs.readFileSync(windowsTerminalConfigPath).toString())
         shellsInfo.font = cfg.profiles.defaults.font.face
         shellsInfo.colors = cfg.schemes.find((schema: { name: string }) => schema.name === cfg.profiles.defaults.colorScheme)
+    } else {
+        logger.warn(`Windows Terminal config path doesn't exist, skipping default theme (${windowsTerminalConfigPath})`)
     }
 
     if(CliArgs.default) {
