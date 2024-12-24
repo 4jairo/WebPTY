@@ -22,6 +22,9 @@
 
     const windowOnResize = () => {
         const currentTree = terminalsCtx.trees[terminalsCtx.currentTreeId]
+        if(!currentTree) {
+            return
+        }
 
         walkTerminals(currentTree.tree, (terminalId) => {
             terminalsCtx.terminals[terminalId].fitAddon.fit()
