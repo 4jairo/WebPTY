@@ -90,10 +90,11 @@ wsRouter.ws('/ws', (ws, req) => {
     ws.onclose = () => {    
         try {
             process.kill(terminal.pid, 'SIGKILL')
-        } catch (error) {
-            const errString = error instanceof Error ? error.message : String(error)
-            logger.error(`Kill terminal error: ${errString}`)
-        }
+        } catch {}
+        // catch (error) {
+        //     const errString = error instanceof Error ? error.message : String(error)
+        //     logger.error(`Kill terminal error: ${errString}`)
+        // }
 
         if(isTerminalAlive) {
             terminal.kill()
