@@ -7,6 +7,7 @@
   },
   "scripts": {
     "build": "npx tsc && npx pkg .",
+    "build:backend": "npx tsc",
     "start": "node dist/backend/index.js",
     "run": "ts-node src/index.ts",
     "dev": "nodemon src/index.ts"

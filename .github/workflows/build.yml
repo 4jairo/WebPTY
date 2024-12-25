@@ -1,0 +1,98 @@
+name: Builds the release binaries
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  workflow_dispatch:
+
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+          
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+    
+  build:
+    needs: create_release
+    strategy:
+      matrix:
+        include:
+          - target: node16-macos-x64
+            runner: macos-latest
+            name: x64_MacOS
+            bin_ext: ""
+          - target: node16-win-x64
+            runner: windows-latest
+            name: x64_Windows
+            bin_ext: ".exe"
+          - target: node16-linux-x64
+            runner: ubuntu-latest
+            name: x64_Linux
+            bin_ext: ""
+
+    runs-on: ${{ matrix.runner }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: node23
+        uses: actions/setup-node@v3
+        with:
+          node-version: 23.3.0
+
+      - name: frontend deps
+        run: |
+          cd frontend
+          npm install
+
+      - name: build frontend
+        run: |
+          cd frontend
+          npm run build    
+
+      - name: node16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.16.0
+
+      - name: backend deps
+        run: |
+          cd backend
+          npm install
+
+      - name: build backend
+        run: |
+          cd backend
+          npm run build:backend
+          npx pkg . --targets ${{ matrix.target }}
+
+      - name: Zip binaries
+        uses: vimtor/action-zip@v1.2
+        with:
+          dest: ${{ matrix.name }}.zip
+          files: backend/dist/bin/webpty${{ matrix.bin_ext }}
+
+      - name: Upload file
+        uses: actions/upload-release-asset@v1
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.upload_url }}
+          asset_path: ${{ matrix.name }}.zip
+          asset_name: webpty_${{ matrix.name }}.zip
+          asset_content_type: application/zip
