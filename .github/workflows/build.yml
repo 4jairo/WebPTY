@@ -31,10 +31,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - target: node16-macos-x64
-            runner: macos-latest
-            name: x64_MacOS
-            bin_ext: ""
+          #- target: node16-macos-x64
+          #  runner: macos-latest
+          #  name: x64_MacOS
+          #  bin_ext: ""
           - target: node16-win-x64
             runner: windows-latest
             name: x64_Windows
