@@ -8,10 +8,10 @@ import { logger } from '../log'
 
 const infoRouter = express.Router()
 
-const shells = os.platform() === 'win32' ? getShellsWin() : getShellsUnix()
+export const shellsInfo = os.platform() === 'win32' ? getShellsWin() : getShellsUnix()
 
 infoRouter.get('/info', (_, res) => {
-    res.json(shells)
+    res.json(shellsInfo)
 })
 
 type ShellInfo = {

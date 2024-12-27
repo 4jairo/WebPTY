@@ -17,17 +17,17 @@ type WsMessage =
 | { kind: WsMessageKind.Text, text: string }
 
 
-export const createConnection = async (shell: string, customName: string = '', tabColor: string = '') => {
+export const createConnection = async (shell: string, terminalCustomName = '', tabColor = '', treeCustomName = '', treeColor = '') => {
     if(!TerminalsCtx.canSpawnAnotherTerminal()) {
         return
     }
-    
+
     const { terminal, ws } = await createConnectionInner(shell)
     terminal.loadAddon(new WebglAddon())
     terminal.loadAddon(new WebLinksAddon())
     terminal.loadAddon(new ClipboardAddon())
 
-    const terminalId = TerminalsCtx.addTerminal(terminal, ws, shell, customName, tabColor)
+    const terminalId = TerminalsCtx.addTerminal(terminal, ws, shell, terminalCustomName, tabColor, treeCustomName, treeColor)
 
     terminal.onKey(({ key, domEvent }) => {
         if(key === `\x7F` && domEvent.ctrlKey) {
@@ -46,6 +46,7 @@ export const createConnection = async (shell: string, customName: string = '', t
     })
 }
 
+const EXIT_CODE = 3001
 const createConnectionInner = (shell: string) => {
     return new Promise((resolve) => {
         const ws = new WebSocket(`${BASE_API_WS_URL}/ws?shell=${shell}`)
@@ -79,13 +80,15 @@ const createConnectionInner = (shell: string) => {
         }
 
         ws.onclose = (e) => {
-            if(e.code >= 3000) {
-                terminal.write(`\r\nExited with status code ${e.code - 3000}.\r\n`)
+            if(e.code === 3000) {
+                terminal.write(`\r\nSocket closed. ${e.reason}.\r\n`)
+            } else if(e.code >= EXIT_CODE) {
+                terminal.write(`\r\nExited with status code ${e.code - EXIT_CODE}.\r\n`)
             } else {     
                 terminal.write(`\r\nSocket closed with status code ${e.code}\r\n`)
             }
             
-            terminal.write("Press enter to close the terminal")
+            terminal.write("Press any key to close the terminal")
             resolve({ terminal, ws, code: e.code })
         }
     }) as Promise<{ terminal: Terminal, ws: WebSocket, code: number | null }>

@@ -42,13 +42,13 @@ export type TerminalsCtxProps = {
     draggingTerminalId: number
 }
 
-const createTree = (terminalId: number): TerminalTreeProps => ({
+const createTree = (terminalId: number, customName = '', treeColor = ''): TerminalTreeProps => ({
     tree: {
         orientation: 'column',
         terminals: [{ id: terminalId, percent: 100, childs: null }]
     },
-    customName: '',
-    treeColor: ''
+    customName,
+    treeColor
 })
 
 
@@ -77,8 +77,10 @@ const createContext = () => {
         terminal: Terminal, 
         ws: WebSocket, 
         shell: string,
-        customName: string = '',
-        tabColor: string = ''
+        terminalCustomName = '',
+        tabColor = '',
+        treeCustomName = '',
+        treeColor = ''
     ) => {
         const terminalId = ++nextTerminalId
         const treeId = ++nextTerminalTreeId
@@ -92,12 +94,12 @@ const createContext = () => {
                 ws, 
                 shell,
                 fitAddon,
-                customName,
+                customName: terminalCustomName,
                 tabColor,
                 treeId
             }
 
-            prev.trees[treeId] = createTree(terminalId)
+            prev.trees[treeId] = createTree(terminalId, treeCustomName, treeColor)
 
             prev.order.push(terminalId)
             prev.currentTerminal = terminalId

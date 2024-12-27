@@ -58,8 +58,9 @@
             txt: 'Duplicate tab',
             icon: DuplicateIcon,
             fn: () => {
-                const { customName, shell, tabColor } = currentTerminal
-                createConnection(shell, customName, tabColor).then(closeMenu)
+                const { customName: terminalCustomName, shell, tabColor } = currentTerminal
+                const { customName: treeCustomName, treeColor } = currentTree
+                createConnection(shell, terminalCustomName, tabColor, treeCustomName, treeColor).then(closeMenu)
             },
             separation: true
         },
