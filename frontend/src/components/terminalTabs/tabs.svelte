@@ -10,7 +10,7 @@
     import TabContextMenu from "../tabContextMenu/tabContextMenu.svelte";
     import { dropzoneTabOrder } from "../../lib/dndTabOrder";
     import { getShellIcon } from "../../lib/getShellIcon";
-    import { MenuPage } from "../../context/tabContextMenu";
+    import { TabMenuPage, type CommonContextMenuProps } from "../../context/contextMenu";
     import { lightOrDark } from "../../lib/isLightOrDark";
     import SplitIcon from "../../icons/splitIcon.svelte";
     import JoinIcon from "../../icons/joinIcon.svelte";
@@ -21,13 +21,7 @@
     let tabWidth = 200
     let draggingHoverPosition: number | null = null
     let mainContainer: HTMLElement | null = null
-    let contextMenuProps: { 
-        x: number, 
-        y: number, 
-        terminalId: number, 
-        clickOnTab: boolean,
-        menuPage?: MenuPage
-    } | null = null
+    let contextMenuProps: CommonContextMenuProps<TabMenuPage> & { clickOnTab: boolean } | null = null
 
     $: shellsCtx = $ShellsCtx
     $: terminalsCtx = $TerminalsCtx
@@ -98,7 +92,9 @@
 
     const closeContextMenu = () => {
         contextMenuProps = null
-        terminalsCtx.terminals[terminalsCtx.currentTerminal].terminal.focus()
+        if(terminalsCtx.terminals[terminalsCtx.currentTerminal]) {
+            terminalsCtx.terminals[terminalsCtx.currentTerminal].terminal.focus()
+        }
     }
 
     const newTab = () => {
@@ -110,7 +106,7 @@
                 terminalId: -1,
                 x: 10,
                 y: 10,
-                menuPage: MenuPage.NewTab
+                menuPage: TabMenuPage.NewTab
             }
         }
     }

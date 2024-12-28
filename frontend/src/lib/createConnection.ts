@@ -6,16 +6,18 @@ import { TerminalsCtx } from "../context/terminalsContext"
 import { get } from "svelte/store"
 import { ShellsCtx } from "../context/shellsContext"
 import { BASE_API_WS_URL } from "../context/apiUrl"
+import { terminalCopy, terminalPaste, terminalWrite } from "./terminalCopyPaste"
 
-const enum WsMessageKind {
+export const enum WsMessageKind {
     Resize,
     Text
 }
 
-type WsMessage = 
-| { kind: WsMessageKind.Resize, rows: number, cols: number }
-| { kind: WsMessageKind.Text, text: string }
-
+export type WsMessage = 
+// cols, rows
+| [WsMessageKind.Resize, number, number] 
+// text
+| [WsMessageKind.Text, string]
 
 export const createConnection = async (shell: string, terminalCustomName = '', tabColor = '', treeCustomName = '', treeColor = '') => {
     if(!TerminalsCtx.canSpawnAnotherTerminal()) {
@@ -29,20 +31,27 @@ export const createConnection = async (shell: string, terminalCustomName = '', t
 
     const terminalId = TerminalsCtx.addTerminal(terminal, ws, shell, terminalCustomName, tabColor, treeCustomName, treeColor)
 
+    terminal.attachCustomKeyEventHandler((e) => {
+        if(!e.ctrlKey || !e.shiftKey || e.type === 'keyup') {
+            return true
+        }
+
+        if(e.key === 'C') {
+            e.preventDefault()
+            terminalCopy(terminal)
+        } else if (e.key === 'V') {
+            e.preventDefault()
+            terminalPaste(ws, terminalId)
+        }
+
+        return false
+    })
+
     terminal.onKey(({ key, domEvent }) => {
         if(key === `\x7F` && domEvent.ctrlKey) {
             key = `\x17` // ctrl + w
         }
-
-        const msg: WsMessage = {
-            kind: WsMessageKind.Text,
-            text: key
-        }
-        if (ws.readyState === WebSocket.CLOSED) {
-            TerminalsCtx.removeTerminal(terminalId)
-        } else {
-            ws.send(JSON.stringify(msg))
-        }
+        terminalWrite(key, ws, terminalId)
     })
 }
 
@@ -57,17 +66,14 @@ const createConnectionInner = (shell: string) => {
             cursorStyle: 'bar',
             cursorBlink: true,
             cursorInactiveStyle: 'bar',
-            rightClickSelectsWord: true,
+            rightClickSelectsWord: false,
             allowTransparency: true,
             macOptionClickForcesSelection: true,
             theme: defaultValues?.colors
         })
 
         terminal.onResize(({ cols, rows }) => {
-            const msg: WsMessage = {
-                kind: WsMessageKind.Resize,
-                cols, rows
-            }
+            const msg: WsMessage = [WsMessageKind.Resize, cols, rows]
             ws.send(JSON.stringify(msg))
         })
         

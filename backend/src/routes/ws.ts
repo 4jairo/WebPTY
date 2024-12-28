@@ -14,8 +14,10 @@ const enum WsMessageKind {
 }
 
 type WsMessage = 
-| { kind: WsMessageKind.Resize, rows: number, cols: number }
-| { kind: WsMessageKind.Text, text: string }
+// cols, rows
+| [WsMessageKind.Resize, number, number]
+// text
+| [WsMessageKind.Text, string]
 
 
 function isValidStatusCode(code: number) {
@@ -98,13 +100,15 @@ wsRouter.ws('/ws', (ws, req) => {
     ws.onmessage = (e) => {
         try {
             const msg = JSON.parse(e.data as string) as WsMessage
-            switch (msg.kind) {
+            switch (msg[0]) {
                 case WsMessageKind.Text: {
-                    terminal.write(msg.text as string)
+                    const [, text] = msg
+                    terminal.write(text as string)
                     break
                 }
                 case WsMessageKind.Resize: {
-                    terminal.resize(msg.cols, msg.rows)
+                    const [, cols, rows] = msg
+                    terminal.resize(cols, rows)
                     break
                 }
             }

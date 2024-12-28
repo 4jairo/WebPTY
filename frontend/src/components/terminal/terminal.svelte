@@ -4,7 +4,7 @@
 <script lang="ts">
     import 'xterm/css/xterm.css'
     import { onDestroy, onMount } from "svelte";
-    import { TerminalsCtx } from "../../context/terminalsContext";
+    import { TerminalsCtx, type TerminalProps } from "../../context/terminalsContext";
     import { dropzoneTerminalPosition, type TerminalHoverDimensions } from '../../lib/dndTerminalPosition';
     import { terminalsInTree } from '../../lib/terminalsContextUtil';
     import { lightOrDark } from '../../lib/isLightOrDark';
@@ -12,8 +12,10 @@
     import XIcon from '../../icons/xIcon.svelte';
     import RemoveFromTreeIcon from '../../icons/removeFromTreeIcon.svelte';
     import { TerminalDimensionsCtx } from '../../context/terminalsDimensionsContext';
+    import type { CommonContextMenuProps, TerminalMenuPage } from '../../context/contextMenu';
 
     export let terminalId: string
+    export let setContextMenuProps: (p: CommonContextMenuProps<TerminalMenuPage> & { currentTerminal: TerminalProps } | null) => void
 
     let showControls = false
     let positionHover: TerminalHoverDimensions | null = null
@@ -33,6 +35,15 @@
         }
     })
 
+    const handleContextMenu = (e: MouseEvent & { currentTarget: EventTarget & HTMLElement }) => {
+        setContextMenuProps({
+            terminalId: parseInt(terminalId),
+            x: e.clientX,
+            y: e.clientY,
+            currentTerminal: terminalsCtx.terminals[terminalId]
+        })
+    }
+
     onMount(() => {
         observer.observe(terminalContainerElmt!, {
             attributes: true,
@@ -42,8 +53,8 @@
         term.terminal.open(terminalElmt!)
         term.fitAddon.fit()
         term.terminal.focus()
-        
-        const textarea = terminalElmt!.querySelector('textarea')
+
+        const textarea = term.terminal.textarea
         if(textarea) {
             textarea.setAttribute('id', `terminal${terminalId}`)
             textarea.addEventListener('focus', () => {
@@ -90,7 +101,7 @@
             currentTreeId: term.treeId,
             currentTerminalId: parseInt(terminalId),
         }}
-        on:contextmenu|preventDefault
+        on:contextmenu|preventDefault={handleContextMenu}
     >
         {#if positionHover}
             <div
@@ -100,7 +111,6 @@
         {/if}
     </div>
 </main>
-
 
 <style>
     main {

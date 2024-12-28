@@ -9,7 +9,6 @@
     export let fn: (e: MouseEvent & {currentTarget: EventTarget & HTMLElement}) => void = () => {}
     export let separation: boolean = false
     export let disabled: boolean = false
-    export let isLast: boolean = false
     export let center: boolean = false
 </script>
 
@@ -20,7 +19,7 @@
     <p style="{icon ? '' : 'width: 100%;'} {center ? 'text-align: center;' : ''}">{txt}</p>
 </section>
 
-{#if separation && !isLast}
+{#if separation}
     <div class="separation"></div>
 {/if}
 
@@ -31,6 +30,9 @@
         padding: 5px;
         gap: 10px;
         border-radius: 5px;
+    }
+    .disabled {
+        opacity: 0.7;
     }
     section:not(.disabled):hover {
         background-color: rgba(255, 255, 255, 0.2);
