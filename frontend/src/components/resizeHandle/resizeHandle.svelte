@@ -51,7 +51,7 @@
         currentTreeId: terminalsCtx.currentTreeId,
         setPositionHover: (show) => showPositionHover = show,
         draggingTerminalId: terminalsCtx.draggingTerminalId,
-        draggingTerminalTreeId: terminalsCtx.terminals[terminalsCtx.draggingTerminalId].treeId
+        draggingTerminalTreeId: terminalsCtx.terminals[terminalsCtx.draggingTerminalId]?.treeId || -1
     }}
     on:mousedown|preventDefault={handleMousedown}
     style="left: {left}%; top: {top}%; width: {width}; height: {height};"

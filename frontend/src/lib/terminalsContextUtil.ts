@@ -1,4 +1,4 @@
-import type { TerminalTreeRecursive } from "../context/terminalsContext"
+import type { TerminalsCtxProps, TerminalTreeRecursive } from "../context/terminalsContext"
 
 export const walkTerminals = (tree: TerminalTreeRecursive, cb: (terminalId: number) => void) => {
     for (const term of tree.terminals) {
@@ -23,28 +23,42 @@ export const terminalsInTree = (tree: TerminalTreeRecursive) => {
     return total
 }
 
-type findTerminalListType = { tree: TerminalTreeRecursive, idx: number }
-export const findIdOnTree = (tree: TerminalTreeRecursive, terminalId: number): findTerminalListType | undefined => {
+type findTerminalListType = { 
+    tree: TerminalTreeRecursive, 
+    idx: number,
+    outerTree: TerminalTreeRecursive | null
+    outerIdx: number,
+}
+export const findIdOnTree = (
+    tree: TerminalTreeRecursive, 
+    terminalId: number, 
+    outerTree: TerminalTreeRecursive | null = null,
+    outerIdx: number = 0,
+): findTerminalListType | undefined => {
     for (let i = 0; i < tree.terminals.length; i++) {
         const term = tree.terminals[i]
 
         if(term.id === terminalId) {
             return {
                 tree,
-                idx: i
+                idx: i,
+                outerTree,
+                outerIdx
             }
         }
 
         if(term.childs) {
-            const result = findIdOnTree(term.childs, terminalId)
+            const result = findIdOnTree(term.childs, terminalId, tree, i)
             if(result) return result
         }
     }
 }
 
+export const removeTerminalUpdatePercents = (terminals: TerminalTreeRecursive['terminals'], terminalId: number, termIdx: number = -1) => {
+    const terminalIdx = termIdx === -1 || !terminals[termIdx]
+        ? terminals.findIndex(({ id }) => id === terminalId)
+        : termIdx
 
-export const removeTerminalUpdatePercents = (terminals: TerminalTreeRecursive['terminals'], terminalId: number) => {
-    const terminalIdx = terminals.findIndex(({ id }) => id === terminalId)
     if(terminalIdx === -1) {
         return
     }
@@ -56,6 +70,20 @@ export const removeTerminalUpdatePercents = (terminals: TerminalTreeRecursive['t
     }
 }
 
+export const removeTerminalUpdatePercentsUpdateTree = (prev: TerminalsCtxProps, treeRoot: TerminalTreeRecursive, terminalId: number) => {
+    const tree = findIdOnTree(treeRoot, terminalId)!
+    removeTerminalUpdatePercents(tree.tree.terminals, terminalId, tree.idx)      
+
+    if (terminalsInTree(treeRoot) === 0) {
+        delete prev.trees[prev.terminals[terminalId].treeId]
+    }
+
+    if(tree.outerTree && tree.tree.terminals.length === 1) {
+        const outerTerm = tree.outerTree.terminals[tree.outerIdx]
+        outerTerm.id = outerTerm.childs!.terminals[0].id
+        outerTerm.childs = null
+    }
+}
 
 const percentInRange = (percent: number) => {
     return Math.min(85, Math.max(15, percent))

@@ -21,6 +21,8 @@
             document.title = 'webpty'
         }
     }
+    //@ts-ignore
+    $: window.terminalsCtx = terminalsCtx
     let contextMenuProps: CommonContextMenuProps<TerminalMenuPage> & { currentTerminal: TerminalProps } | null = null
 
     const closeContextMenu = () => {
@@ -71,6 +73,7 @@
         display: flex;
         flex-direction: column;
         height: 100vh;
+        overflow: hidden;
     }
     .terminals {
         flex: 1;

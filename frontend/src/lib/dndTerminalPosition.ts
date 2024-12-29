@@ -1,6 +1,6 @@
 import { TerminalsCtx } from "../context/terminalsContext"
 import { dropZoneInner } from "./dropZone"
-import { makeTerminalSpace, findIdOnTree, removeTerminalUpdatePercents, terminalsInTree } from "./terminalsContextUtil"
+import { makeTerminalSpace, findIdOnTree, removeTerminalUpdatePercents, terminalsInTree, removeTerminalUpdatePercentsUpdateTree } from "./terminalsContextUtil"
 
 export type TerminalHoverDimensions = {
     x: number
@@ -29,17 +29,10 @@ export const dropzoneTerminalPosition = (node: HTMLElement, s: DropzoneTerminalP
         }
 
         TerminalsCtx.update((prev) => {
-            
             // remove terminal from prev location
             if(state.draggingTerminalTreeId !== state.currentTreeId) {
                 const draggingTerminalTree = prev.trees[state.draggingTerminalTreeId].tree
-                const treeDragging = findIdOnTree(draggingTerminalTree, state.draggingTerminalId)!
-                
-                removeTerminalUpdatePercents(treeDragging.tree.terminals, state.draggingTerminalId)
-
-                if (terminalsInTree(draggingTerminalTree) === 0) {
-                    delete prev.trees[state.draggingTerminalTreeId]
-                }
+                removeTerminalUpdatePercentsUpdateTree(prev, draggingTerminalTree, state.draggingTerminalId)
             }
 
             // add to new location
@@ -73,7 +66,7 @@ export const dropzoneTerminalPosition = (node: HTMLElement, s: DropzoneTerminalP
                         { id: state.draggingTerminalId, percent: 50, childs: null },
                     ]
 
-                terminalsCurrent[treeCurrent.idx] = TerminalsCtx.createChild(terminalsCurrent[treeCurrent.idx].percent, {
+                terminalsCurrent[treeCurrent.idx] = TerminalsCtx.createChildInner(terminalsCurrent[treeCurrent.idx].percent, {
                     orientation: newOrientation,
                     terminals
                 })

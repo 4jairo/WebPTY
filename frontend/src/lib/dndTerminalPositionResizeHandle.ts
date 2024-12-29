@@ -1,6 +1,6 @@
 import { TerminalsCtx } from "../context/terminalsContext"
 import { dropZoneInner } from "./dropZone"
-import { findIdOnTree, makeTerminalSpace, removeTerminalUpdatePercents, terminalsInTree } from "./terminalsContextUtil"
+import { findIdOnTree, makeTerminalSpace, removeTerminalUpdatePercentsUpdateTree } from "./terminalsContextUtil"
 
 export type DropzoneResizeHandle = {
     draggingTerminalId: number
@@ -28,13 +28,7 @@ export const dropzoneResizeHandle = (node: HTMLElement, s: DropzoneResizeHandle)
             // remove terminal from prev location
             if(state.draggingTerminalTreeId !== state.currentTreeId) {
                 const draggingTerminalTree = prev.trees[state.draggingTerminalTreeId].tree
-                const treeDragging = findIdOnTree(draggingTerminalTree, state.draggingTerminalId)!
-                
-                removeTerminalUpdatePercents(treeDragging.tree.terminals, state.draggingTerminalId)
-
-                if (terminalsInTree(draggingTerminalTree) === 0) {
-                    delete prev.trees[state.draggingTerminalTreeId]
-                }
+                removeTerminalUpdatePercentsUpdateTree(prev, draggingTerminalTree, state.draggingTerminalTreeId)
             }
 
             // add to new location
@@ -49,7 +43,6 @@ export const dropzoneResizeHandle = (node: HTMLElement, s: DropzoneResizeHandle)
 
             prev.terminals[state.draggingTerminalId].treeId = state.currentTreeId
             return prev
-
         })
     }
 

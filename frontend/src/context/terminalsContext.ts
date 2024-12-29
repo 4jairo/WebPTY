@@ -1,7 +1,7 @@
 import { FitAddon } from "@xterm/addon-fit"
 import { get, writable } from "svelte/store"
 import type { Terminal } from "xterm"
-import { findIdOnTree, removeTerminalUpdatePercents, terminalsInTree } from "../lib/terminalsContextUtil"
+import { findIdOnTree, removeTerminalUpdatePercents, removeTerminalUpdatePercentsUpdateTree, terminalsInTree } from "../lib/terminalsContextUtil"
 
 
 export type TerminalProps = {
@@ -65,7 +65,7 @@ const createContext = () => {
         terminals: {}
     })
 
-    const createChild = (percent: number, childs: TerminalTreeRecursive) => {
+    const createChildInner = (percent: number, childs: TerminalTreeRecursive) => {
         return {
             percent, 
             childs,
@@ -180,13 +180,9 @@ const createContext = () => {
             if(prev.terminals[id] === null) return prev
 
             // update `prev.trees`
+            const treeRoot = prev.trees[prev.terminals[id].treeId].tree
             const idNumber = typeof id === 'string' ? parseInt(id) : id
-            const { tree } = findIdOnTree(prev.trees[prev.terminals[id].treeId].tree, idNumber)!
-            removeTerminalUpdatePercents(tree.terminals, idNumber)
-
-            if (terminalsInTree(tree) === 0) {
-                delete prev.trees[prev.terminals[id].treeId]
-            }
+            removeTerminalUpdatePercentsUpdateTree(prev, treeRoot, idNumber)
             
             // create new tree
             prev.trees[treeId] = createTree(idNumber)
@@ -208,13 +204,9 @@ const createContext = () => {
             prev.terminals[id].terminal.dispose()
 
             // update `prev.trees`
+            const treeRoot = prev.trees[prev.terminals[id].treeId].tree
             const idNumber = typeof id === 'string' ? parseInt(id) : id
-            const tree = findIdOnTree(prev.trees[prev.terminals[id].treeId].tree, idNumber)!
-            removeTerminalUpdatePercents(tree.tree.terminals, idNumber)
-
-            if (terminalsInTree(tree.tree) === 0) {
-                delete prev.trees[prev.terminals[id].treeId]
-            }
+            removeTerminalUpdatePercentsUpdateTree(prev, treeRoot, idNumber)
 
             delete prev.terminals[id]
 
@@ -239,7 +231,7 @@ const createContext = () => {
         subscribe: State.subscribe,
         update: State.update,
         addTerminal,
-        createChild,
+        createChildInner,
         removeTerminal,
         removeTerminalFromTree,
         setCurrentTerminal,
