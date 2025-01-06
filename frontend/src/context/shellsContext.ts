@@ -38,8 +38,35 @@ export type ShellInfo = {
     shells: string[],
     defaultShell: number,
     colors?: ITheme,
-    font?: string,
+    font: {
+        exists: boolean,
+        value?: string
+    },
     maxConnections: number
+}
+
+export const DEFAULT_FONTS = 'courier-new, courier, monospace'
+function checkFontExists(font: string | undefined) {
+    if(!font) {
+        return false
+    }
+
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')!
+
+    // Set a baseline font
+    const baselineFont = 'monospace'
+    context.font = `72px ${baselineFont}`
+    const monospaceWidth = context.measureText('test').width
+
+    // Set the font to test
+    context.font = `72px ${font}, ${baselineFont}`
+    const testWidth = context.measureText('test').width
+
+    // Compare widths
+    return testWidth !== monospaceWidth
+        // ? DEFAULT_FONTS
+        // : font
 }
 
 const tryFetch = async (maxTry: number) => {
@@ -60,9 +87,13 @@ const tryFetch = async (maxTry: number) => {
             const result: ShellInfo = {
                 shells: resp.shells,
                 defaultShell: resp.defaultShell,
-                font: resp.font,
+                font: {
+                    exists: checkFontExists(resp.font),
+                    value: resp.font
+                },
                 maxConnections: resp.maxConnections
             }
+            
 
             if(resp.colors) {
                 result.colors = {

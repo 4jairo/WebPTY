@@ -4,7 +4,7 @@ import { WebglAddon } from "@xterm/addon-webgl"
 import { Terminal } from "xterm"
 import { TerminalsCtx } from "../context/terminalsContext"
 import { get } from "svelte/store"
-import { ShellsCtx } from "../context/shellsContext"
+import { DEFAULT_FONTS, ShellsCtx } from "../context/shellsContext"
 import { BASE_API_WS_URL } from "../context/apiUrl"
 import { terminalCopy, terminalPaste, terminalWrite } from "./terminalCopyPaste"
 
@@ -60,9 +60,13 @@ const createConnectionInner = (shell: string) => {
     return new Promise((resolve) => {
         const ws = new WebSocket(`${BASE_API_WS_URL}/ws?shell=${shell}`)
         const { s: defaultValues } = get(ShellsCtx)
+    
+        const font = defaultValues?.font.exists
+            ? defaultValues?.font.value!
+            : DEFAULT_FONTS
 
         const terminal = new Terminal({
-            fontFamily: defaultValues?.font || 'courier-new, courier, monospace',
+            fontFamily: font,
             cursorStyle: 'bar',
             cursorBlink: true,
             cursorInactiveStyle: 'bar',
@@ -71,6 +75,10 @@ const createConnectionInner = (shell: string) => {
             macOptionClickForcesSelection: true,
             theme: defaultValues?.colors
         })
+        
+        if(defaultValues && !defaultValues.font.exists && defaultValues.font.value) {
+            terminal.write(`\r\nFont '${defaultValues.font.value}' is not installed, using fallback fonts\r\n`)
+        }
 
         terminal.onResize(({ cols, rows }) => {
             const msg: WsMessage = [WsMessageKind.Resize, cols, rows]

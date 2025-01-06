@@ -51,6 +51,7 @@
         })
 
         term.terminal.open(terminalElmt!)
+        if(term.terminal.onOpen) term.terminal.onOpen(term.terminal)
         term.fitAddon.fit()
         term.terminal.focus()
 

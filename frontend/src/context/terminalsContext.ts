@@ -1,11 +1,11 @@
 import { FitAddon } from "@xterm/addon-fit"
 import { get, writable } from "svelte/store"
 import type { Terminal } from "xterm"
-import { findIdOnTree, removeTerminalUpdatePercents, removeTerminalUpdatePercentsUpdateTree, terminalsInTree } from "../lib/terminalsContextUtil"
+import { removeTerminalUpdatePercentsUpdateTree } from "../lib/terminalsContextUtil"
 
 
 export type TerminalProps = {
-    terminal: Terminal
+    terminal: Terminal,
     fitAddon: FitAddon
     treeId: number
     ws: WebSocket
