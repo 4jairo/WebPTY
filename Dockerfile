@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 AS builder
+FROM debian:bookworm-slim AS builder
 
 WORKDIR /usr/src/webpty
 
@@ -31,7 +31,7 @@ RUN bash -c ". $NVM_DIR/nvm.sh && \
     npm run build && \
     npx pkg . --targets node16-linux-x64"
 
-FROM ubuntu:22.04 AS runtime
+FROM debian:bookworm-slim AS runtime
 
 
 RUN useradd --user-group --system --create-home --no-log-init --shell /bin/rbash demo
