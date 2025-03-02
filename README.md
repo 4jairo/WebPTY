@@ -4,10 +4,6 @@ A web-based terminal emulator that allows you to run commands in a terminal-like
 
 ![WebPTY Screenshot](./webpty.png)
 
-## Demo
-
-Demo: <https://webpty.4jairo.tech>
-
 To build and run the demo using docker, follow these commands:
 
 ```bash
