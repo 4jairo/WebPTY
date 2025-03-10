@@ -1,6 +1,6 @@
 import { TerminalsCtx } from "../context/terminalsContext"
 import { dropZoneInner } from "./dropZone"
-import { makeTerminalSpace, findIdOnTree, removeTerminalUpdatePercents, terminalsInTree, removeTerminalUpdatePercentsUpdateTree } from "./terminalsContextUtil"
+import { makeTerminalSpace, findIdOnTree, removeTerminalUpdatePercentsUpdateTree } from "./terminalsContextUtil"
 
 export type TerminalHoverDimensions = {
     x: number

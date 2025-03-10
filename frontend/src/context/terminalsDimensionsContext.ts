@@ -61,12 +61,12 @@ const getAllTerminalDimensions2 = (
                     x: currentOffsetX + width,
                     y: currentOffsetY,
                     width: 0,
-                    height: currentOffsetY + height
+                    height: height
                 }
                 : {
                     x: currentOffsetX,
                     y: currentOffsetY + height,
-                    width: currentOffsetX + width,
+                    width: width,
                     height: 0,
                 }
         }

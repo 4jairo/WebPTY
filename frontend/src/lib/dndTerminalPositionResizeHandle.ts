@@ -28,7 +28,7 @@ export const dropzoneResizeHandle = (node: HTMLElement, s: DropzoneResizeHandle)
             // remove terminal from prev location
             if(state.draggingTerminalTreeId !== state.currentTreeId) {
                 const draggingTerminalTree = prev.trees[state.draggingTerminalTreeId].tree
-                removeTerminalUpdatePercentsUpdateTree(prev, draggingTerminalTree, state.draggingTerminalTreeId)
+                removeTerminalUpdatePercentsUpdateTree(prev, draggingTerminalTree, state.draggingTerminalId)
             }
 
             // add to new location
