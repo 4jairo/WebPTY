@@ -15,6 +15,7 @@ docker run -p 8900:8900 --rm webpty
 
 - **Tab Menu**: Multiple terminal sessions with a tab interface.
 - **Split Terminals**: Split terminals horizontally or vertically in the same tab.
+- **Keyboard Shortcuts**: keyboard shortcuts for various terminal actions.
 
 ## Architecture
 

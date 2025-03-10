@@ -7,6 +7,7 @@ import { get } from "svelte/store"
 import { DEFAULT_FONTS, ShellsCtx } from "../context/shellsContext"
 import { BASE_API_WS_URL } from "../context/apiUrl"
 import { terminalCopy, terminalPaste, terminalWrite } from "./terminalCopyPaste"
+import { SpecialKeysContext } from "../context/specialKeysContext"
 
 export const enum WsMessageKind {
     Resize,
@@ -31,20 +32,97 @@ export const createConnection = async (shell: string, terminalCustomName = '', t
 
     const terminalId = TerminalsCtx.addTerminal(terminal, ws, shell, terminalCustomName, tabColor, treeCustomName, treeColor)
 
-    terminal.attachCustomKeyEventHandler((e) => {
-        if(!e.ctrlKey || !e.shiftKey || e.type === 'keyup') {
+    const checkCtrlShiftKeys = (e: KeyboardEvent) => {
+        if(e.type === 'keyup') return true
+
+        switch (e.key) {
+            case 'C':
+                e.preventDefault()
+                terminalCopy(terminal)
+                return false
+            case 'V':
+                e.preventDefault()
+                terminalPaste(ws, terminalId)
+                return false
+            default:
+                return true
+        }
+    }
+
+    const keysPressed = {
+        t: false,
+        w: false,
+        ArrowLeft: false,
+        ArrowRight: false,
+        ArrowUp: false,
+        ArrowDowm: false
+    }
+    const checkCtrlAltKeys = (e: KeyboardEvent) => {
+        if(e.type === 'keyup') {
+            if (e.key in keysPressed) {
+                keysPressed[e.key as keyof typeof keysPressed] = false
+            }
             return true
         }
 
-        if(e.key === 'C') {
-            e.preventDefault()
-            terminalCopy(terminal)
-        } else if (e.key === 'V') {
-            e.preventDefault()
-            terminalPaste(ws, terminalId)
+        if (e.key in keysPressed) {
+            if (keysPressed[e.key as keyof typeof keysPressed]) {
+                return false
+            }
         }
 
-        return false
+        let returnValue = false
+        switch (e.key) {
+            case 't': {
+                const shellsCtx = get(ShellsCtx)
+                if(shellsCtx.s) {
+                    createConnection(shellsCtx.s.shells[shellsCtx.s.defaultShell])
+                }
+                break
+            }
+            case 'w': {
+                TerminalsCtx.removeTerminal(terminalId)
+                break
+            }
+            case 'ArrowLeft': {
+                TerminalsCtx.altTabTerminal(false)
+                break
+            }
+            case 'ArrowRight': {
+                TerminalsCtx.altTabTerminal(true)
+                break
+            }
+            case 'ArrowUp': {
+                TerminalsCtx.altTabTree(true)
+                break
+            }
+            case 'ArrowDown': {
+                TerminalsCtx.altTabTree(false)
+                break
+            }
+            default:
+                returnValue = true
+        }
+
+        if (e.key in keysPressed) {
+            keysPressed[e.key as keyof typeof keysPressed] = true
+        }
+
+        return returnValue
+    }
+
+    terminal.attachCustomKeyEventHandler((e) => {
+        if(e.ctrlKey && e.shiftKey) {
+            return checkCtrlShiftKeys(e)
+        }
+        if(e.ctrlKey && e.altKey) {
+            SpecialKeysContext.set({ ctrlAltPressed: true })
+            return checkCtrlAltKeys(e)
+        } else {
+            SpecialKeysContext.set({ ctrlAltPressed: false })
+        }
+
+        return true
     })
 
     terminal.onKey(({ key, domEvent }) => {

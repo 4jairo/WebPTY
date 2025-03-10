@@ -13,6 +13,7 @@
     import RemoveFromTreeIcon from '../../icons/removeFromTreeIcon.svelte';
     import { TerminalDimensionsCtx } from '../../context/terminalsDimensionsContext';
     import type { CommonContextMenuProps, TerminalMenuPage } from '../../context/contextMenu';
+    import { SpecialKeysContext } from '../../context/specialKeysContext';
 
     export let terminalId: string
     export let setContextMenuProps: (p: CommonContextMenuProps<TerminalMenuPage> & { currentTerminal: TerminalProps } | null) => void
@@ -23,9 +24,12 @@
     let terminalContainerElmt: HTMLElement | null = null
     $: shellsCtx = $ShellsCtx
     $: terminalsCtx = $TerminalsCtx
+    $: specialKeysCtx = $SpecialKeysContext
     $: terminalDimensionsCtx = $TerminalDimensionsCtx
     $: tDimensions = terminalDimensionsCtx[term.treeId].terminals[terminalId]
     $: isCurrentTree = terminalsCtx.currentTreeId === terminalsCtx.terminals[terminalId].treeId
+    $: isCurrentTerm = terminalsCtx.currentTerminal === parseInt(terminalId)
+    $: isDragging = terminalsCtx.draggingTerminalId === parseInt(terminalId) && terminalsCtx.isDragging
     $: term = terminalsCtx.terminals[terminalId]
 
     const observer = new MutationObserver(() => {
@@ -51,7 +55,6 @@
         })
 
         term.terminal.open(terminalElmt!)
-        if(term.terminal.onOpen) term.terminal.onOpen(term.terminal)
         term.fitAddon.fit()
         term.terminal.focus()
 
@@ -73,7 +76,7 @@
     on:mouseenter={() => showControls = true}
     on:mouseleave={() => showControls = false}
     bind:this={terminalContainerElmt}
-    style="{isCurrentTree ? '' : 'display: none;'}{tDimensions ? `height: ${tDimensions.height}%; width: ${tDimensions.width}%; top: ${tDimensions.y}%; left: ${tDimensions.x}%` : ''}"
+    style="{isDragging ? 'border: solid 1px blue;' : ''} {isCurrentTree ? '' : 'display: none;'}{tDimensions ? `height: ${tDimensions.height}%; width: ${tDimensions.width}%; top: ${tDimensions.y}%; left: ${tDimensions.x}%` : ''}"
 >
     {#if showControls}
         <div class="controls" style="color: {lightOrDark(defaultBgc(shellsCtx.s)) ? 'black' : 'white'};">
@@ -82,7 +85,6 @@
                     <RemoveFromTreeIcon />
                 </div>
             {/if}
-
             <div
                 style="{term.tabColor ? `background-color: ${term.tabColor};` : ''} color: {lightOrDark(term.tabColor) ? 'black' : 'white'}"
                 on:click={() => TerminalsCtx.removeTerminal(terminalId)}
@@ -94,6 +96,7 @@
     
     <div
         class="terminalContainer"
+        style="{(specialKeysCtx.ctrlAltPressed && isCurrentTerm) ? 'border: solid 1px green;' : ''}"
         bind:this={terminalElmt}
         use:dropzoneTerminalPosition={{
             draggingTerminalId: terminalsCtx.draggingTerminalId,

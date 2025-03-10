@@ -172,6 +172,8 @@
                 style={getTabStyle(current, tabColor, fontColor, terminalId)}
                 draggable="true"
                 on:mousedown={(e) => handleClickTab(e, terminalId)}
+                on:dragstart={() => TerminalsCtx.setIsDragging(true)}
+                on:dragend={() => TerminalsCtx.setIsDragging(false)}
                 on:contextmenu|preventDefault|stopPropagation={(e) => handleContextMenuOnTab(e, terminalId)}
             >
                 <svelte:component this={getShellIcon(shell)}/>

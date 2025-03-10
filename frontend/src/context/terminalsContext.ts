@@ -1,7 +1,7 @@
 import { FitAddon } from "@xterm/addon-fit"
 import { get, writable } from "svelte/store"
 import type { Terminal } from "xterm"
-import { removeTerminalUpdatePercentsUpdateTree } from "../lib/terminalsContextUtil"
+import { removeTerminalUpdatePercentsUpdateTree, walkTerminals } from "../lib/terminalsContextUtil"
 
 
 export type TerminalProps = {
@@ -39,7 +39,8 @@ export type TerminalsCtxProps = {
     order: number[],
     currentTerminal: number,
     currentTreeId: number,
-    draggingTerminalId: number
+    draggingTerminalId: number,
+    isDragging: boolean
 }
 
 const createTree = (terminalId: number, customName = '', treeColor = ''): TerminalTreeProps => ({
@@ -62,7 +63,8 @@ const createContext = () => {
         draggingTerminalId: 0,
         trees: {},
         order: [],
-        terminals: {}
+        terminals: {},
+        isDragging: false
     })
 
     const createChildInner = (percent: number, childs: TerminalTreeRecursive) => {
@@ -154,6 +156,65 @@ const createContext = () => {
             return prev
         })
     }
+    
+    const altTabTree = (direction: boolean) => {
+        State.update(prev => {
+            const treeIds = Object.keys(prev.trees).map(Number)
+            const currentTreeIdx = treeIds.findIndex((id) => id === prev.currentTreeId)
+            const newTreeIdx = currentTreeIdx + (direction ? 1 : -1)
+
+            if (newTreeIdx < 0) {
+                prev.currentTreeId = treeIds[treeIds.length - 1]
+            } else if (newTreeIdx > treeIds.length -1) {
+                prev.currentTreeId = treeIds[0]
+            } else {
+                prev.currentTreeId = treeIds[newTreeIdx]
+            }
+
+            const terminalsInNewTree: number[] = []
+            walkTerminals(prev.trees[prev.currentTreeId].tree, (termId) => {
+                terminalsInNewTree.push(termId)
+            })
+
+            prev.currentTerminal = terminalsInNewTree[0]
+            return prev
+        }) 
+    }
+
+    const altTabTerminal = (direction: boolean) => {
+        State.update((prev) => {
+            if(!prev.terminals[prev.currentTerminal]) {
+                return prev
+            }
+
+            const terminalsId: number[] = []
+            walkTerminals(prev.trees[prev.currentTreeId].tree, (termId) => {
+                terminalsId.push(termId)
+            })
+
+            const currentTerminalIdx = terminalsId.findIndex((t) => t === prev.currentTerminal)
+            const newCurrTerminal = currentTerminalIdx + (direction ? 1 : -1)
+
+            if(newCurrTerminal < 0) {
+                setCurrentTerminalInner(prev, terminalsId[terminalsId.length -1])
+            } else if(newCurrTerminal > terminalsId.length -1) {
+                setCurrentTerminalInner(prev, terminalsId[0])
+            } else {
+                setCurrentTerminalInner(prev, terminalsId[newCurrTerminal])
+            }
+
+            prev.terminals[prev.currentTerminal].terminal.focus()
+
+            return prev
+        })
+    }
+
+    const setIsDragging = (newValue: boolean) => {
+        State.update(prev => {
+            prev.isDragging = newValue
+            return prev
+        })
+    }
 
     const setTerminalProp = <T extends keyof TerminalProps>(terminalId: number | string, key: T, value: TerminalProps[T]) => {
         State.update(prev => {
@@ -232,10 +293,13 @@ const createContext = () => {
         update: State.update,
         addTerminal,
         createChildInner,
+        altTabTerminal,
+        altTabTree,
         removeTerminal,
         removeTerminalFromTree,
         setCurrentTerminal,
         setDraggingTerminal,
+        setIsDragging,
         canSpawnAnotherTerminal,
         setTerminalOrder,
         setTabCustomName: (terminalId: string | number, name: string) => setTerminalProp(terminalId, 'customName', name),

@@ -45,12 +45,20 @@ export const dropzoneResizeHandle = (node: HTMLElement, s: DropzoneResizeHandle)
             return prev
         })
     }
+    
+    const onDrag = (e: DragEvent) => {
+        if(state.draggingTerminalTreeId === state.currentTreeId) {
+            e.dataTransfer!.dropEffect = 'none'
+            return
+        }
+    }
 
     return dropZoneInner<DropzoneResizeHandle>({
         node,
         onEnter,
         onLeave,
         onDrop,
+        onDrag,
         onUpdate: (newState) => state = newState
     }) 
 }
